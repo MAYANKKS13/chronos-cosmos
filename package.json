@@ -1,0 +1,13 @@
+{
+  "name": "chronos-cosmos-3d",
+  "version": "1.0.0",
+  "description": "ChronosCosmos 3D: Deep Time & Macro-Scale Cosmic Web Simulation",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

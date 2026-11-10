@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChronosCosmos 3D - Deep Time & Cosmic Web Simulator</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Import map for Three.js ES Modules -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <!-- 3D Canvas Container -->
+  <div id="canvas-container"></div>
+
+  <!-- Ambient Audio / Cosmic Soundscape (Optional toggle) -->
+  <div class="audio-toggle-container">
+    <button id="audio-toggle" class="btn-icon" title="Toggle Cosmic Drone">🔊</button>
+  </div>
+
+  <!-- Top Glass HUD: Header and Navigation / Status -->
+  <header class="hud-panel top-hud">
+    <div class="logo-area">
+      <div class="logo-badge">3D</div>
+      <h1>CHRONOS<span>COSMOS</span></h1>
+    </div>
+    <div class="cosmic-status">
+      <div class="status-item">
+        <span class="label">CURRENT EPOCH:</span>
+        <span id="current-epoch-name" class="value glow-text">Galaxy Formation & Cosmic Web</span>
+      </div>
+      <div class="status-item">
+        <span class="label">COSMIC TIME (t):</span>
+        <span id="current-time-display" class="value">13.8 Gyr (Present)</span>
+      </div>
+      <div class="status-item">
+        <span class="label">TEMPERATURE:</span>
+        <span id="current-temp-display" class="value">2.73 K</span>
+      </div>
+    </div>
+    <div class="hud-actions">
+      <button id="btn-mentor" class="btn-glow">🤖 Cosmologist Mentor</button>
+      <button id="btn-reset-cam" class="btn-secondary">Reset View</button>
+    </div>
+  </header>
+
+  <!-- Left Glass HUD: Cosmological Simulator (Friedmann Equations) -->
+  <aside class="hud-panel left-hud">
+    <div class="panel-header">
+      <h2>COSMOLOGY SIMULATOR</h2>
+      <span class="subtitle">Friedmann Expansion Parameters</span>
+    </div>
+
+    <div class="control-group">
+      <div class="control-label">
+        <span>Matter Density (&Omega;<sub>m</sub>)</span>
+        <span id="val-omega-m" class="num-val">0.31</span>
+      </div>
+      <input type="range" id="slider-omega-m" min="0.0" max="1.5" step="0.01" value="0.31">
+      <div class="slider-ticks">
+        <span>0.0</span>
+        <span>0.31 (Standard)</span>
+        <span>1.5</span>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <div class="control-label">
+        <span>Dark Energy (&Omega;<sub>&Lambda;</sub>)</span>
+        <span id="val-omega-lambda" class="num-val">0.69</span>
+      </div>
+      <input type="range" id="slider-omega-lambda" min="0.0" max="2.0" step="0.01" value="0.69">
+      <div class="slider-ticks">
+        <span>0.0</span>
+        <span>0.69 (Standard)</span>
+        <span>2.0</span>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <div class="control-label">
+        <span>Hubble Constant (H<sub>0</sub>)</span>
+        <span id="val-h0" class="num-val">67.4 km/s/Mpc</span>
+      </div>
+      <input type="range" id="slider-h0" min="50" max="100" step="0.5" value="67.4">
+      <div class="slider-ticks">
+        <span>50</span>
+        <span>Planck (67.4)</span>
+        <span>100</span>
+      </div>
+    </div>
+
+    <div class="fate-card">
+      <div class="fate-title">PREDICTED FATE:</div>
+      <div id="fate-result" class="fate-outcome glow-cyan">ACCELERATING EXPANSION (BIG FREEZE)</div>
+      <p id="fate-desc" class="fate-description">
+        Dark energy dominates the cosmic balance (&Omega;<sub>&Lambda;</sub> > &Omega;<sub>m</sub>), driving eternal runaway expansion toward total heat death.
+      </p>
+    </div>
+
+    <div class="metrics-block">
+      <div class="metric-row">
+        <span>Spatial Curvature (&Omega;<sub>k</sub>):</span>
+        <span id="val-omega-k">0.00 (Flat)</span>
+      </div>
+      <div class="metric-row">
+        <span>Deceleration (q<sub>0</sub>):</span>
+        <span id="val-q0">-0.535 (Accelerating)</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Right Glass HUD: Galaxy Atlas & Inspector -->
+  <aside class="hud-panel right-hud" id="galaxy-inspector">
+    <div class="panel-header">
+      <h2>GALAXY ATLAS</h2>
+      <span class="subtitle">Macro-Structure Inspector</span>
+    </div>
+    <div id="inspector-content">
+      <div class="empty-state">
+        <p>Click on any prominent galaxy or cosmic node in the Cosmic Web to inspect astrophysical properties.</p>
+      </div>
+      <div id="galaxy-details" class="hidden">
+        <h3 id="gal-name" class="gal-title">Milky Way (Local Group)</h3>
+        <div class="gal-meta">
+          <div class="data-row">
+            <span class="lbl">Structure:</span>
+            <span id="gal-structure" class="val">Laniakea Supercluster</span>
+          </div>
+          <div class="data-row">
+            <span class="lbl">Redshift (z):</span>
+            <span id="gal-redshift" class="val">0.000</span>
+          </div>
+          <div class="data-row">
+            <span class="lbl">Lookback Time:</span>
+            <span id="gal-lookback" class="val">0.0 Gyr</span>
+          </div>
+          <div class="data-row">
+            <span class="lbl">Dark Matter Ratio:</span>
+            <span id="gal-dm-ratio" class="val">84.5%</span>
+          </div>
+          <div class="data-row">
+            <span class="lbl">Morphology:</span>
+            <span id="gal-type" class="val">Barred Spiral (SBbc)</span>
+          </div>
+        </div>
+        <div class="gal-description-box">
+          <p id="gal-desc">Part of the Virgo Supercluster within Laniakea. Contains ~100-400 billion stars bound by a halo of cold dark matter.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick POIs -->
+    <div class="poi-section">
+      <span class="subtitle">Major Structures</span>
+      <div class="poi-chips">
+        <button class="chip" data-target="laniakea">Laniakea</button>
+        <button class="chip" data-target="bootes">Boötes Void</button>
+        <button class="chip" data-target="sloan">Sloan Great Wall</button>
+        <button class="chip" data-target="shapley">Shapley Supercluster</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Bottom Glass HUD: Deep Time Logarithmic Timeline -->
+  <footer class="hud-panel bottom-hud">
+    <div class="timeline-header">
+      <div class="timeline-title-group">
+        <h2>DEEP TIME COSMIC TIMELINE</h2>
+        <span class="sub-timeline">Logarithmic Continuum: 10<sup>-43</sup>s &rarr; 10<sup>100</sup> Years</span>
+      </div>
+      <div class="timeline-playback">
+        <button id="btn-play-pause" class="btn-play">▶ Play Journey</button>
+        <span id="playback-speed-lbl">Speed: 1x</span>
+      </div>
+    </div>
+
+    <!-- Epoch Milestone Indicators -->
+    <div class="epoch-milestones">
+      <div class="milestone-marker active" data-step="0">
+        <span class="dot"></span>
+        <span class="name">Inflation</span>
+      </div>
+      <div class="milestone-marker" data-step="1">
+        <span class="dot"></span>
+        <span class="name">CMB / Recombination</span>
+      </div>
+      <div class="milestone-marker" data-step="2">
+        <span class="dot"></span>
+        <span class="name">Cosmic Dawn</span>
+      </div>
+      <div class="milestone-marker" data-step="3">
+        <span class="dot"></span>
+        <span class="name">Cosmic Web (Present)</span>
+      </div>
+      <div class="milestone-marker" data-step="4">
+        <span class="dot"></span>
+        <span class="name">Degenerate Era</span>
+      </div>
+      <div class="milestone-marker" data-step="5">
+        <span class="dot"></span>
+        <span class="name">Black Hole Era</span>
+      </div>
+      <div class="milestone-marker" data-step="6">
+        <span class="dot"></span>
+        <span class="name">Heat Death</span>
+      </div>
+    </div>
+
+    <!-- Logarithmic Slider -->
+    <div class="slider-track-container">
+      <input type="range" id="deep-time-slider" min="0" max="6" step="0.001" value="3.0">
+      <div class="time-ticks">
+        <span>10<sup>-43</sup> s</span>
+        <span>380 kyr</span>
+        <span>100 Myr</span>
+        <span>13.8 Gyr</span>
+        <span>10<sup>14</sup> yr</span>
+        <span>10<sup>40</sup> yr</span>
+        <span>10<sup>100</sup> yr</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- AI Mentor Floating Modal / Drawer -->
+  <div id="ai-mentor-modal" class="mentor-drawer hidden">
+    <div class="mentor-header">
+      <div class="mentor-title">
+        <span class="mentor-icon">🤖</span>
+        <h3>AI COSMOLOGIST MENTOR</h3>
+      </div>
+      <button id="btn-close-mentor" class="btn-close">&times;</button>
+    </div>
+    <div class="mentor-body">
+      <div id="chat-messages" class="chat-messages">
+        <div class="message ai">
+          <div class="msg-author">Dr. Carl (Astrophysics AI)</div>
+          <div class="msg-content">
+            Greetings, explorer. I am your cosmological mentor. Ask me about the cosmic inflation epoch, the physics of the CMB, dark matter evidence, the Hubble tension, or the ultimate Heat Death of our universe!
+          </div>
+        </div>
+      </div>
+      <div class="suggested-queries">
+        <button class="query-chip">Explain the Hubble Tension</button>
+        <button class="query-chip">What is the evidence for Dark Matter?</button>
+        <button class="query-chip">How did the CMB form?</button>
+        <button class="query-chip">What happens in the Black Hole Era?</button>
+      </div>
+      <form id="chat-form" class="chat-input-bar">
+        <input type="text" id="chat-input" placeholder="Inquire about cosmic secrets..." autocomplete="off">
+        <button type="submit" class="btn-send">Send</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
